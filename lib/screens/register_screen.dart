@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
-import '../constants/strings.dart';
-import '../widgets/custom_text_field.dart';
-import '../widgets/custom_button.dart';
+import '../database.dart';
+import '../widgets/simple_button.dart';
 import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -11,53 +9,54 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
-  final AuthService auth = AuthService();
-  bool isLoading = false;
-  String successMessage = '';
-  String errorMessage = '';
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  final confirmController = TextEditingController();
+  bool loading = false;
+  String success = '';
+  String error = '';
 
-  Future<void> performRegistration() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    if (_passwordController.text != _confirmPasswordController.text) {
-      setState(() {
-        errorMessage = 'Passwords do not match';
-      });
+  Future<void> doRegister() async {
+    if (emailController.text.isEmpty) {
+      setState(() => error = 'Email required');
+      return;
+    }
+    if (!emailController.text.contains('@')) {
+      setState(() => error = 'Valid email needed');
+      return;
+    }
+    if (passwordController.text.isEmpty) {
+      setState(() => error = 'Password required');
+      return;
+    }
+    if (passwordController.text.length < 6) {
+      setState(() => error = 'Need 6+ characters');
+      return;
+    }
+    if (confirmController.text.isEmpty) {
+      setState(() => error = 'Confirm password');
+      return;
+    }
+    if (passwordController.text != confirmController.text) {
+      setState(() => error = 'Passwords dont match');
       return;
     }
 
     setState(() {
-      isLoading = true;
-      errorMessage = '';
-      successMessage = '';
+      loading = true;
+      error = '';
+      success = '';
     });
 
     try {
-      final result = await auth.signUp(
-        _emailController.text.trim(),
-        _passwordController.text.trim(),
-      );
-      
-      setState(() {
-        successMessage = result ?? 'Registration successful! Please login.';
-      });
-      
+      await register(emailController.text.trim(), passwordController.text.trim());
+      setState(() => success = 'Success! Please login.');
       await Future.delayed(Duration(seconds: 2));
-      
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LoginScreen()),
-      );
-    } catch (error) {
-      setState(() {
-        errorMessage = error.toString();
-      });
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => LoginScreen()));
+    } catch (e) {
+      setState(() => error = e.toString());
     } finally {
-      setState(() => isLoading = false);
+      setState(() => loading = false);
     }
   }
 
@@ -65,137 +64,129 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppStrings.register),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
+        title: Text('Sign Up'),
+        leading: IconButton(icon: Icon(Icons.arrow_back), onPressed: () => Navigator.pop(context)),
       ),
       body: SingleChildScrollView(
         child: Padding(
           padding: EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                SizedBox(height: 40),
+          child: Column(
+            children: [
+              SizedBox(height: 40),
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.blue.shade50,
+                ),
+                child: ClipOval(
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return CircleAvatar(
+                        backgroundColor: Colors.blue.shade100,
+                        child: Text(
+                          'CP',
+                          style: TextStyle(
+                            color: Colors.blue,
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              SizedBox(height: 16),
+              Text('Create Account', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text('Track your competitive programming journey', style: TextStyle(color: Colors.grey)),
+              SizedBox(height: 40),
+              
+              if (success.isNotEmpty)
                 Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.blue.shade50,
-                  ),
-                  child: ClipOval(
-                    child: Image.asset(
-                      'assets/images/logo.png',
-                      fit: BoxFit.cover,
-                    ),
-                  ),
+                  padding: EdgeInsets.all(12),
+                  margin: EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.green.shade200)),
+                  child: Row(children: [
+                    Icon(Icons.check_circle, color: Colors.green),
+                    SizedBox(width: 8),
+                    Expanded(child: Text(success, style: TextStyle(color: Colors.green.shade800))),
+                  ]),
                 ),
-                SizedBox(height: 16),
-                Text('Create Account', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                SizedBox(height: 4),
-                Text('Track your competitive programming journey', style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
-                SizedBox(height: 40),
-                
-                if (successMessage.isNotEmpty)
-                  Container(
-                    padding: EdgeInsets.all(12),
-                    margin: EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.green.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.green.shade200),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.check_circle, color: Colors.green),
-                        SizedBox(width: 8),
-                        Expanded(child: Text(successMessage, style: TextStyle(color: Colors.green.shade800))),
-                      ],
-                    ),
-                  ),
-                
-                if (errorMessage.isNotEmpty)
-                  Container(
-                    padding: EdgeInsets.all(12),
-                    margin: EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.red.shade200),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.error, color: Colors.red),
-                        SizedBox(width: 8),
-                        Expanded(child: Text(errorMessage, style: TextStyle(color: Colors.red.shade800))),
-                      ],
-                    ),
-                  ),
-                
-                Text(AppStrings.email, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                SizedBox(height: 8),
-                CustomTextField(
-                  controller: _emailController,
+              
+              if (error.isNotEmpty)
+                Container(
+                  padding: EdgeInsets.all(12),
+                  margin: EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.red.shade200)),
+                  child: Row(children: [
+                    Icon(Icons.error, color: Colors.red),
+                    SizedBox(width: 8),
+                    Expanded(child: Text(error, style: TextStyle(color: Colors.red.shade800))),
+                  ]),
+                ),
+              
+              Text('Email', style: TextStyle(fontWeight: FontWeight.w500)),
+              SizedBox(height: 8),
+              TextFormField(
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
                   hintText: 'user@example.com',
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) return 'Email is required';
-                    if (!value.contains('@')) return 'Enter a valid email';
-                    return null;
-                  },
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.blue)),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 ),
-                SizedBox(height: 20),
-                Text(AppStrings.password, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                SizedBox(height: 8),
-                CustomTextField(
-                  controller: _passwordController,
+              ),
+              SizedBox(height: 20),
+              
+              Text('Password', style: TextStyle(fontWeight: FontWeight.w500)),
+              SizedBox(height: 8),
+              TextFormField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: InputDecoration(
                   hintText: '••••••••',
-                  obscureText: true,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) return 'Password is required';
-                    if (value.length < 6) return 'Password must be at least 6 characters';
-                    return null;
-                  },
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.blue)),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 ),
-                SizedBox(height: 20),
-                Text('Confirm Password', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                SizedBox(height: 8),
-                CustomTextField(
-                  controller: _confirmPasswordController,
+              ),
+              SizedBox(height: 20),
+              
+              Text('Confirm Password', style: TextStyle(fontWeight: FontWeight.w500)),
+              SizedBox(height: 8),
+              TextFormField(
+                controller: confirmController,
+                obscureText: true,
+                decoration: InputDecoration(
                   hintText: '••••••••',
-                  obscureText: true,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) return 'Confirm password is required';
-                    return null;
-                  },
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.blue)),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 ),
-                SizedBox(height: 32),
-                CustomButton(text: AppStrings.register, onPressed: performRegistration, isLoading: isLoading),
-                SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(AppStrings.haveAccount),
-                    SizedBox(width: 4),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => LoginScreen()),
-                        );
-                      },
-                      child: Text(
-                        AppStrings.login,
-                        style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+              ),
+              SizedBox(height: 32),
+              
+              SimpleButton(text: 'Sign Up', onPressed: doRegister, loading: loading),
+              
+              SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('Already have an account?'),
+                  SizedBox(width: 4),
+                  GestureDetector(
+                    onTap: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => LoginScreen())),
+                    child: Text('Login', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w600)),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),

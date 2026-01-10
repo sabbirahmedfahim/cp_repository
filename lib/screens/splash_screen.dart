@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
+import '../database.dart';
 import 'login_screen.dart';
 import 'home_screen.dart';
-import '../constants/strings.dart';
 
 class SplashScreen extends StatefulWidget {
   @override
@@ -10,27 +9,19 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  final AuthService auth = AuthService();
-
   @override
   void initState() {
     super.initState();
-    checkAuthentication();
+    checkAuth();
   }
 
-  Future<void> checkAuthentication() async {
+  Future<void> checkAuth() async {
     await Future.delayed(Duration(seconds: 2));
     
-    if (auth.isLoggedIn()) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
-      );
+    if (isLoggedIn()) {
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomeScreen()));
     } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LoginScreen()),
-      );
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => LoginScreen()));
     }
   }
 
@@ -42,24 +33,14 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.blue.shade50,
-              ),
-              child: ClipOval(
-                child: Image.asset(
-                  'assets/images/logo.png',
-                  fit: BoxFit.cover,
-                ),
-              ),
+            CircleAvatar(
+              radius: 60,
+              backgroundColor: Colors.blue.shade50,
+              backgroundImage: AssetImage('assets/images/logo.png'),
             ),
-            
             SizedBox(height: 24),
             Text(
-              AppStrings.appName,
+              'CP Repository',
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
@@ -68,7 +49,7 @@ class _SplashScreenState extends State<SplashScreen> {
             ),
             SizedBox(height: 8),
             Text(
-              AppStrings.appMotto,
+              'Track Your CP Progress',
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey.shade600,
