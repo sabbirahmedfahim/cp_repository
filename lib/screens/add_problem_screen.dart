@@ -12,26 +12,11 @@ class _AddProblemScreenState extends State<AddProblemScreen> {
   final titleController = TextEditingController();
   final urlController = TextEditingController();
   final platformController = TextEditingController();
-  final notesController = TextEditingController();
+  final tagController = TextEditingController();
   
-  String difficulty = 'Medium';
   String status = 'Pending';
-  DateTime date = DateTime.now();
   bool loading = false;
-
-  List<String> diffs = ['Easy', 'Medium', 'Hard'];
-
-  Future<void> pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: date,
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
-    );
-    if (picked != null && picked != date) {
-      setState(() => date = picked);
-    }
-  }
+  List<String> tags = [];
 
   Future<void> save() async {
     if (titleController.text.isEmpty) {
@@ -56,10 +41,8 @@ class _AddProblemScreenState extends State<AddProblemScreen> {
         title: titleController.text.trim(),
         url: urlController.text.trim(),
         platform: platformController.text.trim(),
-        difficulty: difficulty,
+        tags: tags,
         status: status,
-        date: date,
-        notes: notesController.text.isNotEmpty ? notesController.text : null,
         createdAt: DateTime.now(),
       );
 
@@ -78,15 +61,31 @@ class _AddProblemScreenState extends State<AddProblemScreen> {
   }
 
   Color getStatusColor(String s) {
+    if (s == 'Solved') return Colors.green.shade800;
+    if (s == 'Attempt') return Colors.blue.shade800;
+    return Colors.grey.shade800;
+  }
+
+  Color getStatusTextColor(String s) {
     if (s == 'Solved') return Colors.green.shade100;
     if (s == 'Attempt') return Colors.blue.shade100;
     return Colors.grey.shade100;
   }
 
-  Color getDiffColor(String d) {
-    if (d == 'Easy') return Colors.green;
-    if (d == 'Medium') return Colors.orange;
-    return Colors.red;
+  void addTag() {
+    final tag = tagController.text.trim();
+    if (tag.isNotEmpty && !tags.contains(tag)) {
+      setState(() {
+        tags.add(tag);
+        tagController.clear();
+      });
+    }
+  }
+
+  void removeTag(String tag) {
+    setState(() {
+      tags.remove(tag);
+    });
   }
 
   @override
@@ -94,16 +93,21 @@ class _AddProblemScreenState extends State<AddProblemScreen> {
     titleController.dispose();
     urlController.dispose();
     platformController.dispose();
-    notesController.dispose();
+    tagController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text('Add Problem'),
-        leading: IconButton(icon: Icon(Icons.arrow_back), onPressed: () => Navigator.pop(context)),
+        backgroundColor: Colors.black,
+        title: Text('Add Problem', style: TextStyle(color: Colors.white)),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context)
+        ),
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16),
@@ -111,75 +115,106 @@ class _AddProblemScreenState extends State<AddProblemScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(height: 16),
-            Text('Problem Title *', style: TextStyle(fontWeight: FontWeight.w500)),
+            Text('Problem Title *', style: TextStyle(fontWeight: FontWeight.w500, color: Colors.white)),
             SizedBox(height: 8),
             TextFormField(
               controller: titleController,
+              style: TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 hintText: 'e.g., Two Sum',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
+                hintStyle: TextStyle(color: Colors.grey.shade500),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade700)),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade700)),
                 focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.blue)),
+                fillColor: Colors.grey.shade900,
+                filled: true,
                 contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               ),
             ),
             SizedBox(height: 20),
             
-            Text('Problem URL *', style: TextStyle(fontWeight: FontWeight.w500)),
+            Text('Problem URL *', style: TextStyle(fontWeight: FontWeight.w500, color: Colors.white)),
             SizedBox(height: 8),
             TextFormField(
               controller: urlController,
+              style: TextStyle(color: Colors.white),
               keyboardType: TextInputType.url,
               decoration: InputDecoration(
                 hintText: 'https://leetcode.com/problems/two-sum/',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
+                hintStyle: TextStyle(color: Colors.grey.shade500),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade700)),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade700)),
                 focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.blue)),
+                fillColor: Colors.grey.shade900,
+                filled: true,
                 contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               ),
             ),
             SizedBox(height: 20),
             
-            Text('Platform Name *', style: TextStyle(fontWeight: FontWeight.w500)),
+            Text('Platform Name *', style: TextStyle(fontWeight: FontWeight.w500, color: Colors.white)),
             SizedBox(height: 8),
             TextFormField(
               controller: platformController,
+              style: TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 hintText: 'e.g., LeetCode, Codeforces, etc.',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
+                hintStyle: TextStyle(color: Colors.grey.shade500),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade700)),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade700)),
                 focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.blue)),
+                fillColor: Colors.grey.shade900,
+                filled: true,
                 contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               ),
             ),
             SizedBox(height: 20),
             
-            Text('Difficulty *', style: TextStyle(fontWeight: FontWeight.w500)),
+            Text('Tags (Optional)', style: TextStyle(fontWeight: FontWeight.w500, color: Colors.white)),
             SizedBox(height: 8),
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade300), borderRadius: BorderRadius.circular(8)),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: difficulty,
-                  isExpanded: true,
-                  items: diffs.map((d) {
-                    return DropdownMenuItem<String>(
-                      value: d,
-                      child: Row(
-                        children: [
-                          Container(width: 12, height: 12, decoration: BoxDecoration(color: getDiffColor(d), shape: BoxShape.circle)),
-                          SizedBox(width: 8),
-                          Text(d),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                  onChanged: (value) => setState(() => difficulty = value!),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: tagController,
+                    style: TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: 'e.g., DP, Graph, Math',
+                      hintStyle: TextStyle(color: Colors.grey.shade500),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade700)),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade700)),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.blue)),
+                      fillColor: Colors.grey.shade900,
+                      filled: true,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    ),
+                  ),
                 ),
-              ),
+                SizedBox(width: 8),
+                IconButton(
+                  icon: Icon(Icons.add, color: Colors.blue),
+                  onPressed: addTag,
+                  tooltip: 'Add Tag',
+                ),
+              ],
             ),
+            SizedBox(height: 8),
+            if (tags.isNotEmpty)
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: tags.map((tag) {
+                  return Chip(
+                    label: Text(tag, style: TextStyle(color: Colors.white)),
+                    backgroundColor: Colors.grey.shade800,
+                    deleteIcon: Icon(Icons.close, size: 16, color: Colors.white),
+                    onDeleted: () => removeTag(tag),
+                  );
+                }).toList(),
+              ),
             SizedBox(height: 20),
             
-            Text('Status *', style: TextStyle(fontWeight: FontWeight.w500)),
+            Text('Status *', style: TextStyle(fontWeight: FontWeight.w500, color: Colors.white)),
             SizedBox(height: 8),
             Row(
               children: ['Pending', 'Attempt', 'Solved'].map((s) {
@@ -187,54 +222,25 @@ class _AddProblemScreenState extends State<AddProblemScreen> {
                   child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: 2),
                     child: ChoiceChip(
-                      label: Text(s),
+                      label: Text(s, style: TextStyle(
+                        color: status == s ? Colors.white : Colors.grey.shade300,
+                        fontWeight: status == s ? FontWeight.w600 : FontWeight.normal
+                      )),
                       selected: status == s,
-                      onSelected: (selected) => setState(() => status = s),
+                      onSelected: (selected) {
+                        setState(() {
+                          status = s;
+                        });
+                      },
                       selectedColor: getStatusColor(s),
+                      backgroundColor: Colors.grey.shade900,
+                      side: BorderSide.none,
                     ),
                   ),
                 );
               }).toList(),
             ),
-            SizedBox(height: 20),
-            
-            Text('Date Solved/Attempted *', style: TextStyle(fontWeight: FontWeight.w500)),
-            SizedBox(height: 8),
-            GestureDetector(
-              onTap: pickDate,
-              child: Container(
-                width: double.infinity,
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade300), borderRadius: BorderRadius.circular(8)),
-                child: Row(
-                  children: [
-                    Icon(Icons.calendar_today, size: 20, color: Colors.grey),
-                    SizedBox(width: 12),
-                    Text('${date.day}/${date.month}/${date.year}', style: TextStyle(fontSize: 16)),
-                    Spacer(),
-                    Icon(Icons.arrow_drop_down, color: Colors.grey),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(height: 20),
-            
-            Text('Notes (Optional)', style: TextStyle(fontWeight: FontWeight.w500)),
-            SizedBox(height: 8),
-            TextFormField(
-              controller: notesController,
-              maxLines: 4,
-              decoration: InputDecoration(
-                hintText: 'Any thoughts...',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.blue)),
-                contentPadding: EdgeInsets.all(16),
-              ),
-            ),
             SizedBox(height: 32),
-            
-            Text('* Required fields', style: TextStyle(fontSize: 12, color: Colors.grey, fontStyle: FontStyle.italic)),
-            SizedBox(height: 16),
             
             SimpleButton(text: 'Add Problem', onPressed: save, loading: loading),
             SizedBox(height: 16),

@@ -4,10 +4,8 @@ class Problem {
   String title;
   String url;
   String platform;
-  String difficulty;
+  List<String> tags;
   String status;
-  DateTime date;
-  String? notes;
   DateTime createdAt;
 
   Problem({
@@ -16,10 +14,8 @@ class Problem {
     required this.title,
     required this.url,
     required this.platform,
-    this.difficulty = 'Medium',
+    this.tags = const [],
     this.status = 'Pending',
-    required this.date,
-    this.notes,
     required this.createdAt,
   });
 
@@ -32,11 +28,20 @@ class Problem {
     }
   }
 
+  bool get isSolved => status.toLowerCase() == 'solved';
+
   static Problem fromMap(Map<String, dynamic> data) {
     String statusText = data['status']?.toString() ?? 'Pending';
     if (statusText.toLowerCase() == 'pending') statusText = 'Pending';
     if (statusText.toLowerCase() == 'attempt') statusText = 'Attempt';
     if (statusText.toLowerCase() == 'solved') statusText = 'Solved';
+
+    List<String> tagsList = [];
+    if (data['tags'] != null) {
+      if (data['tags'] is List) {
+        tagsList = List<String>.from(data['tags']);
+      }
+    }
 
     return Problem(
       id: data['id']?.toString() ?? '',
@@ -44,12 +49,8 @@ class Problem {
       title: data['title']?.toString() ?? '',
       url: data['problem_url']?.toString() ?? '',
       platform: data['platform']?.toString() ?? '',
-      difficulty: data['difficulty']?.toString() ?? 'Medium',
+      tags: tagsList,
       status: statusText,
-      date: data['date_solved'] != null 
-          ? DateTime.parse(data['date_solved'].toString())
-          : DateTime.now(),
-      notes: data['notes']?.toString(),
       createdAt: data['created_at'] != null
           ? DateTime.parse(data['created_at'].toString())
           : DateTime.now(),
@@ -57,14 +58,17 @@ class Problem {
   }
 
   Map<String, dynamic> toMap() {
-    return {
+    final map = <String, dynamic>{
       'title': title.trim(),
       'problem_url': url.trim(),
       'platform': platform.trim(),
-      'difficulty': difficulty,
       'status': status,
-      'date_solved': date.toIso8601String().split('T')[0],
-      'notes': notes ?? '',
     };
+    
+    if (tags.isNotEmpty) {
+      map['tags'] = tags;
+    }
+    
+    return map;
   }
 }

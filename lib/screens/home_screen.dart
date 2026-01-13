@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import '../database.dart';
 import '../models/problem.dart';
-import '../widgets/difficulty_chip.dart';
 import 'add_problem_screen.dart';
 import 'login_screen.dart';
-import 'dart:math';
-import 'dart:ui';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -15,11 +13,10 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<Problem> problems = [];
   bool loading = true;
-  int total = 0;
-  int pending = 0;
-  int attempt = 0;
-  int solved = 0;
+  int total = 0, pending = 0, attempt = 0, solved = 0;
   String? filter;
+  String? tagFilter;
+  String? pinnedProblemId;
 
   @override
   void initState() {
@@ -30,268 +27,530 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> load() async {
     setState(() => loading = true);
     try {
-      final data = await getProblems();
+      problems = await getProblems();
       final stats = await getStats();
-      
-      setState(() {
-        problems = data;
-        total = stats['total'] ?? 0;
-        pending = stats['pending'] ?? 0;
-        attempt = stats['attempt'] ?? 0;
-        solved = stats['solved'] ?? 0;
-      });
+      total = stats['total'] ?? 0;
+      pending = stats['pending'] ?? 0;
+      attempt = stats['attempt'] ?? 0;
+      solved = stats['solved'] ?? 0;
     } catch (e) {
-      print('Load error: $e');
-    } finally {
-      setState(() => loading = false);
+      print('Error: $e');
     }
+    setState(() => loading = false);
   }
 
-  void setFilter(String? status) {
+  List<Problem> get shownProblems {
+    var filtered = problems;
+    
+    if (filter == 'Unsolved') {
+      filtered = filtered.where((p) => p.status == 'Pending' || p.status == 'Attempt').toList();
+    } else if (filter == 'Solved') {
+      filtered = filtered.where((p) => p.status == 'Solved').toList();
+    }
+    
+    if (tagFilter != null && tagFilter!.isNotEmpty) {
+      filtered = filtered.where((p) => p.tags.contains(tagFilter!)).toList();
+    }
+    
+    return filtered;
+  }
+
+  Problem? get pinnedProblem {
+    if (pinnedProblemId == null) return null;
+    return problems.firstWhere((problem) => problem.id == pinnedProblemId, orElse: () => Problem(
+      id: '',
+      userId: '',
+      title: '',
+      url: '',
+      platform: '',
+      tags: [],
+      status: 'Pending',
+      createdAt: DateTime.now(),
+    ));
+  }
+
+  List<Problem> get nonPinnedProblems {
+    return shownProblems.where((problem) => problem.id != pinnedProblemId).toList();
+  }
+
+  void togglePin(String problemId) {
     setState(() {
-      if (filter == status) {
-        filter = null;
+      if (pinnedProblemId == problemId) {
+        pinnedProblemId = null;
       } else {
-        filter = status;
+        pinnedProblemId = problemId;
       }
     });
   }
 
-  List<Problem> get shownProblems {
-    if (filter == null) return problems;
-    return problems.where((p) => p.status == filter).toList();
+  List<String> getAllTags() {
+    final allTags = <String>{};
+    for (var problem in problems) {
+      allTags.addAll(problem.tags);
+    }
+    return allTags.toList()..sort();
   }
 
-  Future<void> changeStatus(Problem problem, String newStatus) async {
-    try {
-      await updateStatus(problem.id, newStatus);
+  Future<void> _promptTags(Problem problem) async {
+    final result = await showDialog<List<String>>(
+      context: context,
+      builder: (context) => TagDialog(existingTags: problem.tags),
+    );
+
+    if (result != null) {
+      await updateProblemTags(problem.id, result);
       await load();
-    } catch (e) {
-      print('Status error: $e');
     }
   }
 
-  Future<void> _deleteProblem(String problemId) async {
-    try {
-      await deleteProblem(problemId);
-      await load();
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Deleted'), backgroundColor: Colors.green));
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Delete failed'), backgroundColor: Colors.red));
+  void _changeStatus(Problem problem) async {
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        backgroundColor: Colors.black,
+        title: Text('Change Status', style: TextStyle(color: Colors.white)),
+        children: [
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(context, 'Pending'),
+            child: Row(children: [
+              Icon(Icons.access_time, color: Colors.grey),
+              SizedBox(width: 12),
+              Text('Pending', style: TextStyle(color: Colors.white)),
+            ]),
+          ),
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(context, 'Attempt'),
+            child: Row(children: [
+              Icon(Icons.refresh, color: Colors.blue),
+              SizedBox(width: 12),
+              Text('Attempt', style: TextStyle(color: Colors.white)),
+            ]),
+          ),
+          SimpleDialogOption(
+            onPressed: () async {
+              Navigator.pop(context, 'Solved');
+            },
+            child: Row(children: [
+              Icon(Icons.check_circle, color: Colors.green),
+              SizedBox(width: 12),
+              Text('Solved', style: TextStyle(color: Colors.white)),
+            ]),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && result != problem.status) {
+      await updateProblemStatus(problem.id, result);
+      if (result == 'Solved') {
+        await _promptTags(problem);
+      }
+      load();
     }
   }
 
-  Future<void> _logoutUser() async {
-    try {
-      await logout();
-      
-      Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => LoginScreen()),
-        (route) => false,
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Logout failed: $e')),
-      );
+  void _deleteProblem(String id) async {
+    await deleteProblem(id);
+    if (pinnedProblemId == id) {
+      pinnedProblemId = null;
     }
+    load();
+    ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Deleted'), backgroundColor: Colors.green));
   }
 
-  Color getPlatformColor(String name) {
-    final lower = name.toLowerCase();
-    if (lower.contains('leetcode')) return Colors.orange;
-    if (lower.contains('codeforces')) return Colors.red;
-    if (lower.contains('codechef')) return Colors.brown;
-    if (lower.contains('hackerrank')) return Colors.green;
-    if (lower.contains('atcoder')) return Colors.blue;
-    if (lower.contains('cses')) return Colors.purple;
-    if (lower.contains('spoj')) return Colors.teal;
-    return Colors.grey.shade700;
-  }
-
-  Color getStatusColor(String s) {
-    if (s == 'Solved') return Colors.green;
-    if (s == 'Attempt') return Colors.blue;
-    return Colors.grey;
+  void _logout() async {
+    await logout();
+    Navigator.pushReplacement(
+        context, MaterialPageRoute(builder: (_) => LoginScreen()));
   }
 
   @override
   Widget build(BuildContext context) {
+    int unsolved = pending + attempt;
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text('CP Repository'),
-        actions: [IconButton(icon: Icon(Icons.logout), onPressed: _logoutUser)],
-      ),
-      body: loading
-          ? Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                Container(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      Text('Your Progress', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                      SizedBox(height: 16),
-                      Center(
-                        child: Container(
-                          width: 180,
-                          height: 180,
-                          child: CustomPaint(painter: ChartPainter(pending: pending, attempt: attempt, solved: solved)),
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      Text('$total Problems Total', style: TextStyle(color: Colors.grey)),
-                    ],
+      backgroundColor: Colors.black,
+      drawer: Drawer(
+        backgroundColor: Colors.grey[900],
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.black,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundColor: Colors.blue.shade800,
+                    child: Icon(Icons.person, size: 30, color: Colors.white),
                   ),
-                ),
-                
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        FilterChip(label: Text('All ($total)'), selected: filter == null, onSelected: (_) => setFilter(null)),
-                        SizedBox(width: 8),
-                        FilterChip(label: Text('Pending ($pending)'), selected: filter == 'Pending', onSelected: (_) => setFilter('Pending')),
-                        SizedBox(width: 8),
-                        FilterChip(label: Text('Attempt ($attempt)'), selected: filter == 'Attempt', onSelected: (_) => setFilter('Attempt')),
-                        SizedBox(width: 8),
-                        FilterChip(label: Text('Solved ($solved)'), selected: filter == 'Solved', onSelected: (_) => setFilter('Solved')),
-                      ],
+                  SizedBox(height: 12),
+                  Text(
+                    'User Profile',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-                
-                SizedBox(height: 16),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('All Problems', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      Text('${shownProblems.length} problems', style: TextStyle(color: Colors.grey)),
-                    ],
+                  SizedBox(height: 4),
+                  Text(
+                    supabase.auth.currentUser?.email ?? 'Not logged in',
+                    style: TextStyle(
+                      color: Colors.grey.shade400,
+                      fontSize: 12,
+                    ),
                   ),
-                ),
-                
-                SizedBox(height: 16),
-                Expanded(
-                  child: shownProblems.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.code_off, size: 64, color: Colors.grey.shade300),
-                              SizedBox(height: 16),
-                              Text(filter == null ? 'No problems yet' : 'No ${filter!.toLowerCase()} problems', style: TextStyle(fontSize: 18, color: Colors.grey.shade500)),
-                              SizedBox(height: 8),
-                              Text(filter == null ? 'Add your first problem' : 'Try changing filter', style: TextStyle(color: Colors.grey.shade400)),
-                            ],
-                          ),
-                        )
-                      : RefreshIndicator(
-                          onRefresh: load,
-                          child: ListView.builder(
-                            itemCount: shownProblems.length,
-                            itemBuilder: (context, index) {
-                              final problem = shownProblems[index];
-                              return ProblemCard(
-                                problem: problem,
-                                onStatusChange: () {
-                                  String next;
-                                  if (problem.status == 'Pending') next = 'Attempt';
-                                  else if (problem.status == 'Attempt') next = 'Solved';
-                                  else next = 'Pending';
-                                  changeStatus(problem, next);
-                                },
-                                onDelete: () => _deleteProblem(problem.id),
-                              );
-                            },
-                          ),
-                        ),
-                ),
-              ],
+                ],
+              ),
             ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await Navigator.push(context, MaterialPageRoute(builder: (_) => AddProblemScreen()));
-          load();
-        },
-        child: Icon(Icons.add),
+            ListTile(
+              leading: Icon(Icons.settings, color: Colors.grey.shade300),
+              title: Text('Settings', style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => SettingsScreen(),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.logout, color: Colors.red.shade300),
+              title: Text('Logout', style: TextStyle(color: Colors.white)),
+              onTap: _logout,
+            ),
+          ],
+        ),
+      ),
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        title: Text('CP Repository', style: TextStyle(color: Colors.white)),
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: Icon(Icons.menu, color: Colors.white),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+      ),
+      body: Stack(
+        children: [
+          loading
+              ? Center(child: CircularProgressIndicator(color: Colors.blue))
+              : Column(
+                  children: [
+                    if (pinnedProblem != null) ...[
+                      Padding(
+                        padding: EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 8),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('FOCUS ZONE',
+                                style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.grey.shade400)),
+                            Text('Currently focused',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade500)),
+                          ],
+                        ),
+                      ),
+                      _ProblemCard(
+                          problem: pinnedProblem!,
+                          isPinned: true,
+                          onStatusChange: () => _changeStatus(pinnedProblem!),
+                          onDelete: () => _deleteProblem(pinnedProblem!.id),
+                          onEditTags: () => _promptTags(pinnedProblem!),
+                          onTogglePin: () => togglePin(pinnedProblem!.id)),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: Divider(color: Colors.grey.shade800),
+                      ),
+                      SizedBox(height: 8),
+                    ],
+                    Padding(
+                      padding: EdgeInsets.all(16),
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            FilterChip(
+                              label: Text('All ($total)', style: TextStyle(color: Colors.white)),
+                              selected: filter == null,
+                              selectedColor: Colors.blue,
+                              backgroundColor: Colors.grey[900],
+                              onSelected: (_) => setState(
+                                  () => filter = filter == null ? '' : null),
+                            ),
+                            SizedBox(width: 12),
+                            FilterChip(
+                              label: Text('Unsolved ($unsolved)', style: TextStyle(color: Colors.white)),
+                              selected: filter == 'Unsolved',
+                              selectedColor: Colors.orange,
+                              backgroundColor: Colors.grey[900],
+                              onSelected: (_) => setState(() => filter =
+                                  filter == 'Unsolved' ? null : 'Unsolved'),
+                            ),
+                            SizedBox(width: 12),
+                            FilterChip(
+                              label: Text('Solved ($solved)', style: TextStyle(color: Colors.white)),
+                              selected: filter == 'Solved',
+                              selectedColor: Colors.green,
+                              backgroundColor: Colors.grey[900],
+                              onSelected: (_) => setState(() =>
+                                  filter = filter == 'Solved' ? null : 'Solved'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('ALL PROBLEMS',
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey.shade400)),
+                          Text('${nonPinnedProblems.length} problems',
+                              style: TextStyle(color: Colors.grey.shade500)),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Expanded(
+                      child: nonPinnedProblems.isEmpty && pinnedProblem == null
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.code_off,
+                                      size: 64, color: Colors.grey.shade700),
+                                  SizedBox(height: 16),
+                                  Text(
+                                    filter == null
+                                        ? 'No problems yet'
+                                        : filter == 'Unsolved'
+                                            ? 'No unsolved problems'
+                                            : 'No solved problems',
+                                    style: TextStyle(
+                                        fontSize: 18, color: Colors.grey.shade400),
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    filter == null
+                                        ? 'Add your first problem'
+                                        : filter == 'Unsolved'
+                                            ? 'All problems are solved!'
+                                            : 'Solve some problems first',
+                                    style: TextStyle(color: Colors.grey.shade500),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : nonPinnedProblems.isEmpty && pinnedProblem != null
+                              ? Container(
+                                  padding: EdgeInsets.all(20),
+                                  child: Center(
+                                    child: Text(
+                                      'No more problems to show',
+                                      style: TextStyle(color: Colors.grey.shade500),
+                                    ),
+                                  ),
+                                )
+                              : RefreshIndicator(
+                                  color: Colors.blue,
+                                  onRefresh: load,
+                                  child: ListView.builder(
+                                    itemCount: nonPinnedProblems.length,
+                                    itemBuilder: (context, index) {
+                                      final problem = nonPinnedProblems[index];
+                                      return _ProblemCard(
+                                          problem: problem,
+                                          isPinned: false,
+                                          onStatusChange: () => _changeStatus(problem),
+                                          onDelete: () => _deleteProblem(problem.id),
+                                          onEditTags: () => _promptTags(problem),
+                                          onTogglePin: () => togglePin(problem.id));
+                                    },
+                                  ),
+                                ),
+                    ),
+                  ],
+                ),
+          Positioned(
+            bottom: 20,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: ElevatedButton(
+                onPressed: () async {
+                  await Navigator.push(
+                      context, MaterialPageRoute(builder: (_) => AddProblemScreen()));
+                  load();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                ),
+                child: Text('Add Problem', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class ChartPainter extends CustomPainter {
-  final int pending;
-  final int attempt;
-  final int solved;
-
-  ChartPainter({required this.pending, required this.attempt, required this.solved});
-
+class TagDialog extends StatefulWidget {
+  final List<String> existingTags;
+  
+  const TagDialog({required this.existingTags});
+  
   @override
-  void paint(Canvas canvas, Size size) {
-    final total = pending + attempt + solved;
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2;
+  _TagDialogState createState() => _TagDialogState();
+}
 
-    if (total == 0) {
-      canvas.drawCircle(center, radius, Paint()..color = Colors.grey.shade300);
-      return;
+class _TagDialogState extends State<TagDialog> {
+  final tagController = TextEditingController();
+  List<String> tags = [];
+  
+  @override
+  void initState() {
+    super.initState();
+    tags = List.from(widget.existingTags);
+  }
+  
+  void addTag() {
+    final tag = tagController.text.trim();
+    if (tag.isNotEmpty && !tags.contains(tag)) {
+      setState(() {
+        tags.add(tag);
+        tagController.clear();
+      });
     }
-
-    double start = -pi / 2;
-
-    void draw(int value, Color color) {
-      if (value == 0) return;
-      final sweep = value / total * 2 * pi;
-      canvas.drawArc(Rect.fromCircle(center: center, radius: radius), start, sweep, true, Paint()..color = color);
-      start += sweep;
-    }
-
-    draw(pending, Colors.grey.shade400);
-    draw(attempt, Colors.blue);
-    draw(solved, Colors.green);
   }
 
+  void removeTag(String tag) {
+    setState(() {
+      tags.remove(tag);
+    });
+  }
+  
   @override
-  bool shouldRepaint(ChartPainter old) {
-    return pending != old.pending || attempt != old.attempt || solved != old.solved;
+  void dispose() {
+    tagController.dispose();
+    super.dispose();
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: Colors.black,
+      title: Text('Add Tags (Optional)', style: TextStyle(color: Colors.white)),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Add tags for this problem (press Enter to add)', style: TextStyle(color: Colors.grey)),
+            SizedBox(height: 16),
+            TextField(
+              controller: tagController,
+              style: TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: 'e.g., DP, Graph, Math',
+                hintStyle: TextStyle(color: Colors.grey),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                suffixIcon: IconButton(
+                  icon: Icon(Icons.add, color: Colors.blue),
+                  onPressed: addTag,
+                ),
+              ),
+              onSubmitted: (_) => addTag(),
+            ),
+            SizedBox(height: 12),
+            if (tags.isNotEmpty)
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: tags.map((tag) {
+                  return Chip(
+                    label: Text(tag, style: TextStyle(color: Colors.white)),
+                    deleteIcon: Icon(Icons.close, size: 16, color: Colors.white),
+                    backgroundColor: Colors.grey[900],
+                    onDeleted: () => removeTag(tag),
+                  );
+                }).toList(),
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text('Skip', style: TextStyle(color: Colors.grey)),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context, tags),
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+          child: Text('Save', style: TextStyle(color: Colors.white)),
+        ),
+      ],
+      insetPadding: EdgeInsets.all(20),
+      contentPadding: EdgeInsets.fromLTRB(24, 20, 24, 0),
+      actionsPadding: EdgeInsets.fromLTRB(24, 0, 24, 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    );
   }
 }
 
-class ProblemCard extends StatefulWidget {
+class _ProblemCard extends StatefulWidget {
   final Problem problem;
+  final bool isPinned;
   final VoidCallback onStatusChange;
   final VoidCallback onDelete;
+  final VoidCallback onEditTags;
+  final VoidCallback onTogglePin;
 
-  const ProblemCard({
-    required this.problem,
-    required this.onStatusChange,
-    required this.onDelete,
-  });
+  const _ProblemCard({
+      required this.problem,
+      required this.isPinned,
+      required this.onStatusChange,
+      required this.onDelete,
+      required this.onEditTags,
+      required this.onTogglePin});
 
   @override
   _ProblemCardState createState() => _ProblemCardState();
 }
 
-class _ProblemCardState extends State<ProblemCard> {
+class _ProblemCardState extends State<_ProblemCard> {
   bool showDelete = false;
 
-  Color getStatusButtonColor(String status) {
-    if (status == 'Solved') return Colors.green;
-    if (status == 'Attempt') return Colors.blue;
-    return Colors.grey;
-  }
+  Color _statusColor(String s) => s == 'Solved'
+      ? Colors.green
+      : s == 'Attempt'
+          ? Colors.blue
+          : Colors.grey;
+  IconData _statusIcon(String s) => s == 'Solved'
+      ? Icons.check_circle
+      : s == 'Attempt'
+          ? Icons.refresh
+          : Icons.access_time;
 
-  IconData getStatusIcon(String status) {
-    if (status == 'Solved') return Icons.check;
-    if (status == 'Attempt') return Icons.refresh;
-    return Icons.access_time;
-  }
-
-  Color getPlatformColor(String name) {
+  Color _platformColor(String name) {
     final lower = name.toLowerCase();
     if (lower.contains('leetcode')) return Colors.orange;
     if (lower.contains('codeforces')) return Colors.red;
@@ -303,15 +562,10 @@ class _ProblemCardState extends State<ProblemCard> {
     return Colors.grey.shade700;
   }
 
-  Color getStatusChipColor(String s) {
-    if (s == 'Solved') return Colors.green;
-    if (s == 'Attempt') return Colors.blue;
-    return Colors.grey;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: Colors.grey[900],
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 1,
       child: Padding(
@@ -324,7 +578,8 @@ class _ProblemCardState extends State<ProblemCard> {
                 Expanded(
                   child: GestureDetector(
                     onTap: () {
-                      if (widget.problem.isValidUrl && widget.problem.url.isNotEmpty) {
+                      if (widget.problem.isValidUrl &&
+                          widget.problem.url.isNotEmpty) {
                         openUrl(widget.problem.url);
                       }
                     },
@@ -333,8 +588,12 @@ class _ProblemCardState extends State<ProblemCard> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
-                        color: widget.problem.isValidUrl ? Colors.blue : Colors.black,
-                        decoration: widget.problem.isValidUrl ? TextDecoration.underline : TextDecoration.none,
+                        color: widget.problem.isValidUrl
+                            ? Colors.blue
+                            : Colors.white,
+                        decoration: widget.problem.isValidUrl
+                            ? TextDecoration.underline
+                            : TextDecoration.none,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -345,87 +604,151 @@ class _ProblemCardState extends State<ProblemCard> {
                 InkWell(
                   onTap: widget.onStatusChange,
                   child: Container(
-                    width: 36,
-                    height: 36,
+                    width: 30,
+                    height: 30,
                     decoration: BoxDecoration(
-                      color: getStatusButtonColor(widget.problem.status).withOpacity(0.1),
+                      color:
+                          _statusColor(widget.problem.status).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: getStatusButtonColor(widget.problem.status).withOpacity(0.3)),
+                      border: Border.all(
+                          color: _statusColor(widget.problem.status)
+                              .withOpacity(0.3)),
                     ),
-                    child: Icon(getStatusIcon(widget.problem.status), color: getStatusButtonColor(widget.problem.status), size: 20),
+                    child: Icon(_statusIcon(widget.problem.status),
+                        color: _statusColor(widget.problem.status), size: 18),
                   ),
                 ),
                 SizedBox(width: 8),
-                
+                IconButton(
+                  icon: Icon(Icons.edit, size: 18, color: Colors.blue),
+                  onPressed: widget.onEditTags,
+                  padding: EdgeInsets.zero,
+                  tooltip: 'Edit Tags',
+                ),
+                SizedBox(width: 4),
+                IconButton(
+                  icon: Icon(
+                    widget.isPinned ? Icons.push_pin : Icons.push_pin_outlined,
+                    size: 18,
+                    color: widget.isPinned ? Colors.orange : Colors.grey.shade500,
+                  ),
+                  onPressed: widget.onTogglePin,
+                  padding: EdgeInsets.zero,
+                  tooltip: widget.isPinned ? 'Unpin' : 'Pin',
+                ),
+                SizedBox(width: 4),
                 if (!showDelete)
                   IconButton(
-                    icon: Icon(Icons.delete_outline, size: 20, color: Colors.grey.shade500),
+                    icon: Icon(Icons.delete_outline,
+                        size: 18, color: Colors.grey.shade500),
                     onPressed: () => setState(() => showDelete = true),
                     padding: EdgeInsets.zero,
                   ),
               ],
             ),
-            
             if (showDelete) ...[
               SizedBox(height: 12),
               Container(
                 padding: EdgeInsets.all(12),
-                decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.red.shade100)),
+                decoration: BoxDecoration(
+                    color: Colors.red.shade900,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red.shade700)),
                 child: Row(
                   children: [
-                    Icon(Icons.warning, size: 16, color: Colors.red),
+                    Icon(Icons.warning, size: 18, color: Colors.red.shade300),
                     SizedBox(width: 8),
-                    Expanded(child: Text('Delete?', style: TextStyle(color: Colors.red.shade800, fontSize: 12, fontWeight: FontWeight.w500))),
+                    Expanded(
+                        child: Text('Delete?',
+                            style: TextStyle(
+                                color: Colors.red.shade200,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500))),
                     SizedBox(width: 8),
-                    TextButton(onPressed: () => setState(() => showDelete = false), child: Text('Cancel', style: TextStyle(fontSize: 12)), style: TextButton.styleFrom(padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4))),
+                    TextButton(
+                        onPressed: () => setState(() => showDelete = false),
+                        child: Text('Cancel', style: TextStyle(fontSize: 13, color: Colors.grey))),
                     SizedBox(width: 4),
-                    ElevatedButton(onPressed: () { widget.onDelete(); setState(() => showDelete = false); }, child: Text('Delete', style: TextStyle(fontSize: 12)), style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white, padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4))),
+                    ElevatedButton(
+                        onPressed: () {
+                          widget.onDelete();
+                          setState(() => showDelete = false);
+                        },
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                        child: Text('Delete', style: TextStyle(fontSize: 13, color: Colors.white))),
                   ],
                 ),
               ),
             ],
-            
             SizedBox(height: 12),
             Row(
               children: [
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(color: getPlatformColor(widget.problem.platform), borderRadius: BorderRadius.circular(12)),
-                  child: Text(widget.problem.platform, style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500)),
+                  decoration: BoxDecoration(
+                      color: _platformColor(widget.problem.platform),
+                      borderRadius: BorderRadius.circular(12)),
+                  child: Text(widget.problem.platform,
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500)),
                 ),
-                SizedBox(width: 8),
-                DifficultyChip(difficulty: widget.problem.difficulty),
                 SizedBox(width: 8),
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: getStatusChipColor(widget.problem.status).withOpacity(0.1),
+                    color: _statusColor(widget.problem.status).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: getStatusChipColor(widget.problem.status).withOpacity(0.3)),
+                    border: Border.all(
+                        color: _statusColor(widget.problem.status)
+                            .withOpacity(0.3)),
                   ),
-                  child: Text(widget.problem.status, style: TextStyle(color: getStatusChipColor(widget.problem.status), fontSize: 12, fontWeight: FontWeight.w500)),
+                  child: Text(widget.problem.status,
+                      style: TextStyle(
+                          color: _statusColor(widget.problem.status),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500)),
                 ),
-                Spacer(),
-                Row(
-                  children: [
-                    Icon(Icons.calendar_today, size: 14, color: Colors.grey),
-                    SizedBox(width: 4),
-                    Text('${widget.problem.date.day}/${widget.problem.date.month}/${widget.problem.date.year}', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                  ],
-                ),
+                if (widget.isPinned) ...[
+                  SizedBox(width: 8),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.orange.withOpacity(0.4)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.push_pin, size: 12, color: Colors.orange),
+                        SizedBox(width: 4),
+                        Text('Pinned',
+                            style: TextStyle(
+                                color: Colors.orange,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500)),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
-            
-            if (widget.problem.notes != null && widget.problem.notes!.isNotEmpty)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: 12),
-                  Text('Notes:', style: TextStyle(fontWeight: FontWeight.w500)),
-                  SizedBox(height: 4),
-                  Text(widget.problem.notes!, style: TextStyle(color: Colors.grey.shade700), maxLines: 2, overflow: TextOverflow.ellipsis),
-                ],
+            if (widget.problem.tags.isNotEmpty) ...[
+              SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: widget.problem.tags.map((tag) {
+                  return Chip(
+                    label: Text(tag,
+                        style: TextStyle(fontSize: 12, color: Colors.white)),
+                    backgroundColor: Colors.grey[800],
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  );
+                }).toList(),
               ),
+            ],
           ],
         ),
       ),

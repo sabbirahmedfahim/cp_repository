@@ -38,7 +38,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
     if (passwordController.text != confirmController.text) {
-      setState(() => error = 'Passwords dont match');
+      setState(() => error = 'Passwords don\'t match');
       return;
     }
 
@@ -60,6 +60,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
+  InputDecoration _inputDecoration(String hint) {
+    return InputDecoration(
+      hintText: hint,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
+      contentPadding: EdgeInsets.symmetric(horizontal: 26, vertical: 14),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -72,7 +80,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           padding: EdgeInsets.all(24),
           child: Column(
             children: [
-              SizedBox(height: 40),
               Container(
                 width: 80,
                 height: 80,
@@ -110,11 +117,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Container(
                   padding: EdgeInsets.all(12),
                   margin: EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.green.shade200)),
+                  decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.green.shade200)),
                   child: Row(children: [
                     Icon(Icons.check_circle, color: Colors.green),
                     SizedBox(width: 8),
-                    Expanded(child: Text(success, style: TextStyle(color: Colors.green.shade800))),
+                    Expanded(child: Text(success, style: TextStyle(color: Colors.green.shade800, fontSize: 12))),
                   ]),
                 ),
               
@@ -122,57 +129,54 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Container(
                   padding: EdgeInsets.all(12),
                   margin: EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.red.shade200)),
+                  decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.red.shade200)),
                   child: Row(children: [
-                    Icon(Icons.error, color: Colors.red),
+                    Icon(Icons.error, color: Colors.red, size: 16),
                     SizedBox(width: 8),
-                    Expanded(child: Text(error, style: TextStyle(color: Colors.red.shade800))),
+                    Expanded(child: Text(error, style: TextStyle(color: Colors.red.shade800, fontSize: 12))),
                   ]),
                 ),
               
               Text('Email', style: TextStyle(fontWeight: FontWeight.w500)),
               SizedBox(height: 8),
-              TextFormField(
-                controller: emailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
-                  hintText: 'user@example.com',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.blue)),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              Container(
+                width: 300,
+                child: TextFormField(
+                  controller: emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: _inputDecoration('your.email@example.com'),
                 ),
               ),
               SizedBox(height: 20),
               
               Text('Password', style: TextStyle(fontWeight: FontWeight.w500)),
               SizedBox(height: 8),
-              TextFormField(
-                controller: passwordController,
-                obscureText: true,
-                decoration: InputDecoration(
-                  hintText: '••••••••',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.blue)),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              Container(
+                width: 300,
+                child: TextFormField(
+                  controller: passwordController,
+                  obscureText: true,
+                  decoration: _inputDecoration('••••••••'),
                 ),
               ),
               SizedBox(height: 20),
               
               Text('Confirm Password', style: TextStyle(fontWeight: FontWeight.w500)),
               SizedBox(height: 8),
-              TextFormField(
-                controller: confirmController,
-                obscureText: true,
-                decoration: InputDecoration(
-                  hintText: '••••••••',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey.shade300)),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.blue)),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              Container(
+                width: 300,
+                child: TextFormField(
+                  controller: confirmController,
+                  obscureText: true,
+                  decoration: _inputDecoration('••••••••'),
                 ),
               ),
               SizedBox(height: 32),
               
-              SimpleButton(text: 'Sign Up', onPressed: doRegister, loading: loading),
+              Container(
+                width: 300,
+                child: SimpleButton(text: 'Sign Up', onPressed: doRegister, loading: loading),
+              ),
               
               SizedBox(height: 24),
               Row(
@@ -182,7 +186,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   SizedBox(width: 4),
                   GestureDetector(
                     onTap: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => LoginScreen())),
-                    child: Text('Login', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w600)),
+                    child: Text('Sign in', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w600)),
                   ),
                 ],
               ),

@@ -9,7 +9,6 @@ void main() async {
     url: 'Your Supabase URL',
     anonKey: 'Your anonKey',
   );
-
   
   runApp(MyApp());
 }
