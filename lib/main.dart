@@ -3,18 +3,15 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/splash_screen.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  
   await Supabase.initialize(
-    url: 'Your Supabase URL',
-    anonKey: 'Your anonKey',
+    url: 'https://daurmqazalgomkpnkamh.supabase.co',
+    anonKey: 'sb_publishable_u44juBKuRLtlpEc3g2d56A__hVz4cU5',
   );
   
-  runApp(MyApp());
+  runApp(myApp());
 }
 
-class MyApp extends StatelessWidget {
-  @override
+class myApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'CP Repository',
