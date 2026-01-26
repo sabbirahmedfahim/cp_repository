@@ -54,7 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
     
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(backgroundColor: Colors.blue.shade100),
+      appBar: AppBar(backgroundColor: Colors.white),
       body: Center(
         child: Container(
           constraints: BoxConstraints(maxWidth: 500),
@@ -69,11 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   backgroundImage: AssetImage('assets/images/logo.png'),
                 ),
                 SizedBox(height: 24),
-                Text('CP Repository', 
-                  style: TextStyle(fontSize: isSmallScreen ? 30 : 36, 
-                  fontWeight: FontWeight.bold, color: Colors.blue)),
-                SizedBox(height: 8),
-                Text('Track Your CP Progress', 
+                Text('Every problem counts. Every attempt matters.', 
                   style: TextStyle(fontSize: isSmallScreen ? 15 : 18, 
                   color: Colors.grey.shade600)),
                 SizedBox(height: 30),

@@ -44,21 +44,10 @@ class _SplashScreenState extends State<SplashScreen> {
                 backgroundImage: AssetImage('assets/images/logo.png'),
               ),
               
-              SizedBox(height: 30),
+              SizedBox(height: 60),
               
               Text(
-                'CP Repository',
-                style: TextStyle(
-                  fontSize: isSmallScreen ? 32 : 40,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue,
-                ),
-              ),
-              
-              SizedBox(height: 10),
-              
-              Text(
-                'Track Your Competitive Programming Progress',
+                'Every problem counts. Every attempt matters.',
                 style: TextStyle(
                   fontSize: isSmallScreen ? 16 : 18,
                   color: Colors.grey.shade600,

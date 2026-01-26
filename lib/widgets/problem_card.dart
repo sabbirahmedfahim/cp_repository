@@ -206,15 +206,6 @@ class ProblemCard extends StatelessWidget {
                         decoration: TextDecoration.underline,
                       ),
                     ),
-                    SizedBox(width: 4),
-                    Text(
-                      '(Tap to view/edit)',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey.shade500,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
                   ],
                 ),
               ),
