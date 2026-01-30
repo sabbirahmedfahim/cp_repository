@@ -1,14 +1,15 @@
 # CP Repository - Online Judge Problem Tracker
 
+<img src="assets/images/home_screen.png" alt="Home Screen" width="600">
+
+<p align="center"><em>**Home Screen**</em></p>
+
 # Project Overview
 
 This project is designed with a specific group of people in mind. Problem-solving in programming is highly valued, and one of the main ways to practice problem-solving is by solving problems on online judges. Problem solvers tackle problems from various judges, discover them from vibrant sources, and continuously exchange ideas to think in a more structured way than before.
 
 Our job is very simple: to provide a space where all these problems can be kept in a central place. We believe that a focused and clean space, rather than random work, greatly boosts productivity.
 
-<img src="assets/images/home_screen.png" alt="Home Screen" width="600">
-
-<p align="center"><em>**Home Screen**</em></p>
 
 ---
 
