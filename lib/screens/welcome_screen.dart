@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../widgets/simple_button.dart';
 
 class WelcomeScreen extends StatelessWidget {
   @override
@@ -75,16 +76,9 @@ class WelcomeScreen extends StatelessWidget {
                 SizedBox(height: 40),
                 Container(
                   width: isSmallScreen ? 300 : 400,
-                  child: ElevatedButton(
+                  child: SimpleButton(
+                    text: 'Back',
                     onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                    ),
-                    child: Text('Back', 
-                      style: TextStyle(fontSize: isSmallScreen ? 16 : 18, 
-                      fontWeight: FontWeight.w600, color: Colors.white)),
                   ),
                 ),
 
