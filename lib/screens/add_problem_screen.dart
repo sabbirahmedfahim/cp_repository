@@ -93,8 +93,6 @@ class _AddProblemScreenState extends State<AddProblemScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isSmallScreen = MediaQuery.of(context).size.width < 600;
-    
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(

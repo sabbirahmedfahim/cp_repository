@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'login_screen.dart';
 
 class ForgotPasswordScreen extends StatelessWidget {
   void copyEmail(BuildContext context) {

@@ -163,7 +163,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final fullName = userProfile?['full_name'] as String?;
     final university = userProfile?['university'] as String?;
     final userEmail = supabase.auth.currentUser?.email;
-    final isSmallScreen = MediaQuery.of(context).size.width < 600;
 
     return Scaffold(
       backgroundColor: Colors.black,
