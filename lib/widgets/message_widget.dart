@@ -13,22 +13,22 @@ class MessageWidget extends StatelessWidget {
     this.color = Colors.red,
   });
 
-  Color get _backgroundColor {
+  Color _backgroundColor() {
     if (isError) return Colors.red.withOpacity(0.1);
     return color.withOpacity(0.1);
   }
 
-  Color get _borderColor {
+  Color _borderColor() {
     if (isError) return Colors.red.withOpacity(0.3);
     return color.withOpacity(0.3);
   }
 
-  Color get _iconColor {
+  Color _iconColor() {
     if (isError) return Colors.red;
     return color;
   }
 
-  Color get _textColor {
+  Color _textColor() {
     if (isError) return Colors.red.shade800;
     if (color == Colors.green) return Colors.green.shade800;
     if (color == Colors.orange) return Colors.orange.shade800;
@@ -42,18 +42,18 @@ class MessageWidget extends StatelessWidget {
       padding: EdgeInsets.all(12),
       margin: EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: _backgroundColor,
+        color: _backgroundColor(),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _borderColor),
+        border: Border.all(color: _borderColor()),
       ),
       child: Row(
         children: [
-          Icon(icon, color: _iconColor, size: 16),
+          Icon(icon, color: _iconColor(), size: 16),
           SizedBox(width: 8),
           Expanded(
             child: Text(
               message,
-              style: TextStyle(color: _textColor, fontSize: 12),
+              style: TextStyle(color: _textColor(), fontSize: 12),
             ),
           ),
         ],

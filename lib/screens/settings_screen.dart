@@ -58,29 +58,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showLogoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[900],
-        title: Text('Logout All Devices?', style: TextStyle(color: Colors.white)),
-        content: Text('You will be logged out from all devices and need to login again.',
-          style: TextStyle(color: Colors.grey)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _logoutAll(context);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-            child: Text('Logout Everywhere', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
+  void _logout() async {
+    await logout();
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => LoginScreen()),
+      (route) => false,
     );
   }
 
@@ -90,15 +73,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         content: Text('Contact Admin!'),
         backgroundColor: Colors.red,
       ),
-    );
-  }
-
-  void _logoutAll(BuildContext context) async {
-    await logout();
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => LoginScreen()),
-      (route) => false,
     );
   }
 
@@ -162,7 +136,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final fullName = userProfile?['full_name'] as String?;
     final university = userProfile?['university'] as String?;
-    final userEmail = supabase.auth.currentUser?.email;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -216,7 +189,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   ),
                                   SizedBox(height: 4),
                                   Text(
-                                    userEmail ?? 'email@example.com',
+                                    'user@example.com',
                                     style: TextStyle(
                                       color: Colors.grey.shade400,
                                       fontSize: 14,
@@ -322,9 +295,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                           child: Icon(Icons.logout, color: Colors.orange, size: 20),
                         ),
-                        title: Text('Logout All Devices', 
+                        title: Text('Logout', 
                           style: TextStyle(color: Colors.orange, fontSize: 15, fontWeight: FontWeight.w500)),
-                        onTap: () => _showLogoutDialog(context),
+                        onTap: _logout,
                       ),
                     ],
                   ),

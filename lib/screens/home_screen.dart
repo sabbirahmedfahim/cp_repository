@@ -39,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => isLoading = false);
   }
 
-  List<Problem> get filteredProblems {
+  List<Problem> getFilteredProblems() {
     var filteredProblems = problems;
 
     if (currChipsFilter == 'Unsolved') {
@@ -54,13 +54,13 @@ class _HomeScreenState extends State<HomeScreen> {
     return filteredProblems;
   }
 
-  Problem? get pinnedProblem {
+  Problem? getPinnedProblem() {
     if (pinnedProblemId == null) return null;
     return problems.firstWhere((problem) => problem.id == pinnedProblemId);
   }
 
-  List<Problem> get nonPinnedProblems {
-    return filteredProblems
+  List<Problem> getNonPinnedProblems() {
+    return getFilteredProblems()
         .where((problem) => problem.id != pinnedProblemId)
         .toList();
   }
@@ -228,7 +228,7 @@ class _HomeScreenState extends State<HomeScreen> {
               else
                 Column(
                   children: [
-                    if (pinnedProblem != null) ...[
+                    if (getPinnedProblem() != null) ...[
                       Padding(
                         padding: EdgeInsets.only(
                             left: 16, right: 16, top: 16, bottom: 8),
@@ -248,24 +248,24 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       if (screenWidth < 600)
                         ProblemCard(
-                            problem: pinnedProblem!,
+                            problem: getPinnedProblem()!,
                             isPinned: true,
                             isRowLayout: false,
-                            onStatusChange: () => _changeStatus(pinnedProblem!),
-                            onDelete: () => _showDeleteDialog(pinnedProblem!.id),
-                            onTagsTap: () => _showTagsDialog(pinnedProblem!),
-                            onTogglePin: () => togglePin(pinnedProblem!.id))
+                            onStatusChange: () => _changeStatus(getPinnedProblem()!),
+                            onDelete: () => _showDeleteDialog(getPinnedProblem()!.id),
+                            onTagsTap: () => _showTagsDialog(getPinnedProblem()!),
+                            onTogglePin: () => togglePin(getPinnedProblem()!.id))
                       else
                         Container(
                           margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           child: ProblemCard(
-                            problem: pinnedProblem!,
+                            problem: getPinnedProblem()!,
                             isPinned: true,
                             isRowLayout: true,
-                            onStatusChange: () => _changeStatus(pinnedProblem!),
-                            onDelete: () => _showDeleteDialog(pinnedProblem!.id),
-                            onTagsTap: () => _showTagsDialog(pinnedProblem!),
-                            onTogglePin: () => togglePin(pinnedProblem!.id),
+                            onStatusChange: () => _changeStatus(getPinnedProblem()!),
+                            onDelete: () => _showDeleteDialog(getPinnedProblem()!.id),
+                            onTagsTap: () => _showTagsDialog(getPinnedProblem()!),
+                            onTogglePin: () => togglePin(getPinnedProblem()!.id),
                           ),
                         ),
                       Padding(
@@ -325,7 +325,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
                                   color: Colors.grey.shade400)),
-                          Text('${nonPinnedProblems.length} problems',
+                          Text('${getNonPinnedProblems().length} problems',
                               style: TextStyle(color: Colors.grey.shade500)),
                         ],
                       ),
@@ -334,7 +334,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Expanded(
                       child: Builder(
                         builder: (context) {
-                          if (nonPinnedProblems.isEmpty && pinnedProblem == null) {
+                          if (getNonPinnedProblems().isEmpty && getPinnedProblem() == null) {
                             String titleText;
                             String subtitleText;
 
@@ -371,7 +371,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             );
                           }
 
-                          if (nonPinnedProblems.isEmpty && pinnedProblem != null) {
+                          if (getNonPinnedProblems().isEmpty && getPinnedProblem() != null) {
                             return Container(
                               padding: EdgeInsets.all(20),
                               child: Center(
@@ -388,9 +388,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             onRefresh: clctDataFromDB,
                             child: screenWidth < 600
                                 ? ListView.builder(
-                                    itemCount: nonPinnedProblems.length,
+                                    itemCount: getNonPinnedProblems().length,
                                     itemBuilder: (context, index) {
-                                      final problem = nonPinnedProblems[index];
+                                      final problem = getNonPinnedProblems()[index];
                                       return ProblemCard(
                                         problem: problem,
                                         isPinned: false,
@@ -410,9 +410,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                       childAspectRatio: screenWidth < 900 ? 1.5 : 1.8,
                                     ),
                                     padding: EdgeInsets.all(16),
-                                    itemCount: nonPinnedProblems.length,
+                                    itemCount: getNonPinnedProblems().length,
                                     itemBuilder: (context, index) {
-                                      final problem = nonPinnedProblems[index];
+                                      final problem = getNonPinnedProblems()[index];
                                       return ProblemCard(
                                         problem: problem,
                                         isPinned: false,
