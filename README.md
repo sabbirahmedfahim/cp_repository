@@ -35,10 +35,10 @@ We know becoming perfect requires much more effort and exposure. There’s no he
 
 ---
 
-## Closing Thoughts
-
-Despite all these limitations, we dream. We don’t know if we’ll succeed, but even if we can’t, we hope that any motivated young person, like a stick of dynamite, can climb the ladder to our current stage and complete 70–80% of the work — and that would make us happier than anything else could.
-
 ## Acknowledgment
 
 To the LLMs. For their assistance and for excellently explaining code, database, and simulations.
+
+## Project Notes
+
+For personal notes on the project’s code and database, see the [Docs](https://github.com/sabbirahmedfahim/cp_repository/blob/main/docs/cp_repository_notes.pdf) | [Drive](https://drive.google.com/file/d/1BWqaLVQNiGywe4NZn3o-JolhefX34Csu/view?usp=sharing).
