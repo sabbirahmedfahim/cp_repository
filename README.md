@@ -4,6 +4,8 @@
 
 <p align="center"><em>**Home Screen**</em></p>
 
+# [Mobile App Simulations (YouTube)](https://www.youtube.com/shorts/raMP08OjC54)
+
 # Project Overview
 
 This project is designed with a specific group of people in mind. Problem-solving in programming is highly valued, and one of the main ways to practice problem-solving is by solving problems on online judges. Problem solvers tackle problems from various judges, discover them from vibrant sources, and continuously exchange ideas to think in a more structured way than before.
