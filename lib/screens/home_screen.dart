@@ -136,8 +136,9 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: Colors.black,
         title: Text('Delete Problem', style: TextStyle(color: Colors.white)),
-        content: Text('Are you sure you want to delete this problem? This action cannot be undone.',
-          style: TextStyle(color: Colors.grey)),
+        content: Text(
+            'Are you sure you want to delete this problem? This action cannot be undone.',
+            style: TextStyle(color: Colors.grey)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -177,25 +178,27 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Colors.black,
       drawer: Drawer(
         backgroundColor: Colors.black,
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            SizedBox(height: 60),
-            ListTile(
-              leading: Icon(Icons.settings, color: Colors.white),
-              title: Text('Settings', style: TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => SettingsScreen()));
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.logout, color: Colors.red),
-              title: Text('Logout', style: TextStyle(color: Colors.white)),
-              onTap: _logout,
-            ),
-          ],
+        child: SafeArea(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              SizedBox(height: 20),
+              ListTile(
+                leading: Icon(Icons.settings, color: Colors.white),
+                title: Text('Settings', style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => SettingsScreen()));
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.logout, color: Colors.red),
+                title: Text('Logout', style: TextStyle(color: Colors.white)),
+                onTap: _logout,
+              ),
+            ],
+          ),
         ),
       ),
       appBar: AppBar(
@@ -211,16 +214,16 @@ class _HomeScreenState extends State<HomeScreen> {
       body: LayoutBuilder(
         builder: (context, constraints) {
           final screenWidth = constraints.maxWidth;
-          
+
           int getGridColumns() {
             if (screenWidth < 600) return 1;
             if (screenWidth < 900) return 2;
             if (screenWidth < 1200) return 3;
             return 4;
           }
-          
+
           final gridColumns = getGridColumns();
-          
+
           return Stack(
             children: [
               if (isLoading)
@@ -251,25 +254,35 @@ class _HomeScreenState extends State<HomeScreen> {
                             problem: getPinnedProblem()!,
                             isPinned: true,
                             isRowLayout: false,
-                            onStatusChange: () => _changeStatus(getPinnedProblem()!),
-                            onDelete: () => _showDeleteDialog(getPinnedProblem()!.id),
-                            onTagsTap: () => _showTagsDialog(getPinnedProblem()!),
-                            onTogglePin: () => togglePin(getPinnedProblem()!.id))
+                            onStatusChange: () =>
+                                _changeStatus(getPinnedProblem()!),
+                            onDelete: () =>
+                                _showDeleteDialog(getPinnedProblem()!.id),
+                            onTagsTap: () =>
+                                _showTagsDialog(getPinnedProblem()!),
+                            onTogglePin: () =>
+                                togglePin(getPinnedProblem()!.id))
                       else
                         Container(
-                          margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          margin:
+                              EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           child: ProblemCard(
                             problem: getPinnedProblem()!,
                             isPinned: true,
                             isRowLayout: true,
-                            onStatusChange: () => _changeStatus(getPinnedProblem()!),
-                            onDelete: () => _showDeleteDialog(getPinnedProblem()!.id),
-                            onTagsTap: () => _showTagsDialog(getPinnedProblem()!),
-                            onTogglePin: () => togglePin(getPinnedProblem()!.id),
+                            onStatusChange: () =>
+                                _changeStatus(getPinnedProblem()!),
+                            onDelete: () =>
+                                _showDeleteDialog(getPinnedProblem()!.id),
+                            onTagsTap: () =>
+                                _showTagsDialog(getPinnedProblem()!),
+                            onTogglePin: () =>
+                                togglePin(getPinnedProblem()!.id),
                           ),
                         ),
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         child: Divider(color: Colors.grey.shade800),
                       ),
                       SizedBox(height: 8),
@@ -286,8 +299,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               selected: currChipsFilter == null,
                               selectedColor: Colors.blue,
                               backgroundColor: Colors.grey[900],
-                              onSelected: (_) => setState(() => currChipsFilter =
-                                  currChipsFilter == null ? '' : null),
+                              onSelected: (_) => setState(() =>
+                                  currChipsFilter =
+                                      currChipsFilter == null ? '' : null),
                             ),
                             SizedBox(width: 12),
                             FilterChip(
@@ -296,10 +310,11 @@ class _HomeScreenState extends State<HomeScreen> {
                               selected: currChipsFilter == 'Unsolved',
                               selectedColor: Colors.orange,
                               backgroundColor: Colors.grey[900],
-                              onSelected: (_) => setState(() => currChipsFilter =
-                                  currChipsFilter == 'Unsolved'
-                                      ? null
-                                      : 'Unsolved'),
+                              onSelected: (_) => setState(() =>
+                                  currChipsFilter =
+                                      currChipsFilter == 'Unsolved'
+                                          ? null
+                                          : 'Unsolved'),
                             ),
                             SizedBox(width: 12),
                             FilterChip(
@@ -308,8 +323,10 @@ class _HomeScreenState extends State<HomeScreen> {
                               selected: currChipsFilter == 'Solved',
                               selectedColor: Colors.green,
                               backgroundColor: Colors.grey[900],
-                              onSelected: (_) => setState(() => currChipsFilter =
-                                  currChipsFilter == 'Solved' ? null : 'Solved'),
+                              onSelected: (_) => setState(() =>
+                                  currChipsFilter = currChipsFilter == 'Solved'
+                                      ? null
+                                      : 'Solved'),
                             ),
                           ],
                         ),
@@ -332,100 +349,120 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     SizedBox(height: 8),
                     Expanded(
-                      child: Builder(
-                        builder: (context) {
-                          if (getNonPinnedProblems().isEmpty && getPinnedProblem() == null) {
-                            String titleText;
-                            String subtitleText;
+                      child: Padding(
+                        padding: EdgeInsets.only(bottom: 80),
+                        child: Builder(
+                          builder: (context) {
+                            if (getNonPinnedProblems().isEmpty &&
+                                getPinnedProblem() == null) {
+                              String titleText;
+                              String subtitleText;
 
-                            if (currChipsFilter == null) {
-                              titleText = 'No problems yet';
-                              subtitleText = 'Add your first problem';
-                            } else if (currChipsFilter == 'Unsolved') {
-                              titleText = 'No unsolved problems';
-                              subtitleText = 'All problems are solved!';
-                            } else {
-                              titleText = 'No solved problems';
-                              subtitleText = 'Solve some problems first';
+                              if (currChipsFilter == null) {
+                                titleText = 'No problems yet';
+                                subtitleText = 'Add your first problem';
+                              } else if (currChipsFilter == 'Unsolved') {
+                                titleText = 'No unsolved problems';
+                                subtitleText = 'All problems are solved!';
+                              } else {
+                                titleText = 'No solved problems';
+                                subtitleText = 'Solve some problems first';
+                              }
+
+                              return Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.code_off,
+                                        size: 64, color: Colors.grey.shade700),
+                                    SizedBox(height: 16),
+                                    Text(
+                                      titleText,
+                                      style: TextStyle(
+                                          fontSize: 18,
+                                          color: Colors.grey.shade400),
+                                    ),
+                                    SizedBox(height: 8),
+                                    Text(
+                                      subtitleText,
+                                      style: TextStyle(
+                                          color: Colors.grey.shade500),
+                                    ),
+                                  ],
+                                ),
+                              );
                             }
 
-                            return Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.code_off,
-                                      size: 64, color: Colors.grey.shade700),
-                                  SizedBox(height: 16),
-                                  Text(
-                                    titleText,
-                                    style: TextStyle(
-                                        fontSize: 18, color: Colors.grey.shade400),
+                            if (getNonPinnedProblems().isEmpty &&
+                                getPinnedProblem() != null) {
+                              return Container(
+                                padding: EdgeInsets.all(20),
+                                child: Center(
+                                  child: Text(
+                                    'No more problems to show',
+                                    style:
+                                        TextStyle(color: Colors.grey.shade500),
                                   ),
-                                  SizedBox(height: 8),
-                                  Text(
-                                    subtitleText,
-                                    style: TextStyle(color: Colors.grey.shade500),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }
-
-                          if (getNonPinnedProblems().isEmpty && getPinnedProblem() != null) {
-                            return Container(
-                              padding: EdgeInsets.all(20),
-                              child: Center(
-                                child: Text(
-                                  'No more problems to show',
-                                  style: TextStyle(color: Colors.grey.shade500),
                                 ),
-                              ),
-                            );
-                          }
+                              );
+                            }
 
-                          return RefreshIndicator(
-                            color: Colors.blue,
-                            onRefresh: clctDataFromDB,
-                            child: screenWidth < 600
-                                ? ListView.builder(
-                                    itemCount: getNonPinnedProblems().length,
-                                    itemBuilder: (context, index) {
-                                      final problem = getNonPinnedProblems()[index];
-                                      return ProblemCard(
-                                        problem: problem,
-                                        isPinned: false,
-                                        isRowLayout: false,
-                                        onStatusChange: () => _changeStatus(problem),
-                                        onDelete: () => _showDeleteDialog(problem.id),
-                                        onTagsTap: () => _showTagsDialog(problem),
-                                        onTogglePin: () => togglePin(problem.id),
-                                      );
-                                    },
-                                  )
-                                : GridView.builder(
-                                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: gridColumns,
-                                      crossAxisSpacing: 16,
-                                      mainAxisSpacing: 16,
-                                      childAspectRatio: screenWidth < 900 ? 1.5 : 1.8,
+                            return RefreshIndicator(
+                              color: Colors.blue,
+                              onRefresh: clctDataFromDB,
+                              child: screenWidth < 600
+                                  ? ListView.builder(
+                                      itemCount: getNonPinnedProblems().length,
+                                      itemBuilder: (context, index) {
+                                        final problem =
+                                            getNonPinnedProblems()[index];
+                                        return ProblemCard(
+                                          problem: problem,
+                                          isPinned: false,
+                                          isRowLayout: false,
+                                          onStatusChange: () =>
+                                              _changeStatus(problem),
+                                          onDelete: () =>
+                                              _showDeleteDialog(problem.id),
+                                          onTagsTap: () =>
+                                              _showTagsDialog(problem),
+                                          onTogglePin: () =>
+                                              togglePin(problem.id),
+                                        );
+                                      },
+                                    )
+                                  : GridView.builder(
+                                      gridDelegate:
+                                          SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: gridColumns,
+                                        crossAxisSpacing: 16,
+                                        mainAxisSpacing: 16,
+                                        childAspectRatio:
+                                            screenWidth < 900 ? 1.5 : 1.8,
+                                      ),
+                                      padding: EdgeInsets.all(16),
+                                      itemCount: getNonPinnedProblems().length,
+                                      itemBuilder: (context, index) {
+                                        final problem =
+                                            getNonPinnedProblems()[index];
+                                        return ProblemCard(
+                                          problem: problem,
+                                          isPinned: false,
+                                          isRowLayout: false,
+                                          onStatusChange: () =>
+                                              _changeStatus(problem),
+                                          onDelete: () =>
+                                              _showDeleteDialog(problem.id),
+                                          onTagsTap: () =>
+                                              _showTagsDialog(problem),
+                                          onTogglePin: () =>
+                                              togglePin(problem.id),
+                                        );
+                                      },
                                     ),
-                                    padding: EdgeInsets.all(16),
-                                    itemCount: getNonPinnedProblems().length,
-                                    itemBuilder: (context, index) {
-                                      final problem = getNonPinnedProblems()[index];
-                                      return ProblemCard(
-                                        problem: problem,
-                                        isPinned: false,
-                                        isRowLayout: false,
-                                        onStatusChange: () => _changeStatus(problem),
-                                        onDelete: () => _showDeleteDialog(problem.id),
-                                        onTagsTap: () => _showTagsDialog(problem),
-                                        onTogglePin: () => togglePin(problem.id),
-                                      );
-                                    },
-                                  ),
-                          );
-                        },
+                            );
+                          },
+                        ),
                       ),
                     ),
                   ],
@@ -437,8 +474,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Center(
                   child: ElevatedButton(
                     onPressed: () async {
-                      await Navigator.push(context,
-                          MaterialPageRoute(builder: (_) => AddProblemScreen()));
+                      await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => AddProblemScreen()));
                       clctDataFromDB();
                     },
                     style: ElevatedButton.styleFrom(
@@ -523,10 +562,13 @@ class _TagDialogState extends State<TagDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Current Tags:', style: TextStyle(color: Colors.grey, fontSize: 14)),
+            Text('Current Tags:',
+                style: TextStyle(color: Colors.grey, fontSize: 14)),
             SizedBox(height: 8),
             if (tags.isEmpty)
-              Text('No tags yet', style: TextStyle(color: Colors.grey.shade500, fontStyle: FontStyle.italic))
+              Text('No tags yet',
+                  style: TextStyle(
+                      color: Colors.grey.shade500, fontStyle: FontStyle.italic))
             else
               Wrap(
                 spacing: 8,
@@ -534,14 +576,16 @@ class _TagDialogState extends State<TagDialog> {
                 children: tags.map((tag) {
                   return Chip(
                     label: Text(tag, style: TextStyle(color: Colors.white)),
-                    deleteIcon: Icon(Icons.close, size: 16, color: Colors.white),
+                    deleteIcon:
+                        Icon(Icons.close, size: 16, color: Colors.white),
                     backgroundColor: Colors.grey[800],
                     onDeleted: () => removeTag(tag),
                   );
                 }).toList(),
               ),
             SizedBox(height: 16),
-            Text('Add New Tag:', style: TextStyle(color: Colors.grey, fontSize: 14)),
+            Text('Add New Tag:',
+                style: TextStyle(color: Colors.grey, fontSize: 14)),
             SizedBox(height: 8),
             Row(
               children: [
@@ -552,8 +596,10 @@ class _TagDialogState extends State<TagDialog> {
                     decoration: InputDecoration(
                       hintText: 'Enter tag name',
                       hintStyle: TextStyle(color: Colors.grey),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                     ),
                   ),
                 ),

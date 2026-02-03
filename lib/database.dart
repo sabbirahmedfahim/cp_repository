@@ -119,10 +119,16 @@ Future<Map<String, int>> getStats() async {
 Future<void> openUrl(String url) async {
   try {
     final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+    if (!await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication,
+    )) {
+      throw 'Could not launch $url';
     }
-  } catch (_) {}
+  } catch (e) {
+    print('Error launching URL: $e');
+    rethrow;
+  }
 }
 
 Future<Map<String, dynamic>?> getUserProfile() async {

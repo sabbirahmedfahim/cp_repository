@@ -115,8 +115,9 @@ class ProblemCard extends StatelessWidget {
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 1,
       child: Padding(
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.fromLTRB(14, 14, 14, 10),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -151,8 +152,11 @@ class ProblemCard extends StatelessWidget {
                 ),
                 SizedBox(width: 8),
                 IconButton(
-                  icon: Icon(Icons.label, size: 18,
-                    color: problem.tags.isEmpty ? Colors.grey.shade500 : Colors.blue),
+                  icon: Icon(Icons.label,
+                      size: 18,
+                      color: problem.tags.isEmpty
+                          ? Colors.grey.shade500
+                          : Colors.blue),
                   onPressed: onTagsTap,
                   padding: EdgeInsets.zero,
                   tooltip: problem.tags.isEmpty ? 'Add Tags' : 'View/Edit Tags',
@@ -171,7 +175,7 @@ class ProblemCard extends StatelessWidget {
                 SizedBox(width: 4),
                 IconButton(
                   icon: Icon(Icons.delete_outline,
-                    size: 18, color: Colors.grey.shade500),
+                      size: 18, color: Colors.grey.shade500),
                   onPressed: onDelete,
                   padding: EdgeInsets.zero,
                   tooltip: 'Delete',
@@ -191,7 +195,7 @@ class ProblemCard extends StatelessWidget {
               ],
             ),
             if (problem.tags.isNotEmpty) ...[
-              SizedBox(height: 12),
+              SizedBox(height: 6),
               GestureDetector(
                 onTap: onTagsTap,
                 child: Row(
@@ -244,7 +248,7 @@ class _StatusIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = _getStatusColor(status);
     final icon = _getStatusIcon(status);
-    
+
     return InkWell(
       onTap: onTap,
       child: Container(
@@ -263,7 +267,7 @@ class _StatusIconButton extends StatelessWidget {
 
 class _PlatformChip extends StatelessWidget {
   final String platform;
-  
+
   const _PlatformChip({required this.platform});
 
   Color _getPlatformColor(String name) {
@@ -300,7 +304,7 @@ class _PlatformChip extends StatelessWidget {
 
 class _StatusChip extends StatelessWidget {
   final String status;
-  
+
   const _StatusChip({required this.status});
 
   Color _getStatusColor(String s) {
@@ -312,7 +316,7 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = _getStatusColor(status);
-    
+
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
