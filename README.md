@@ -43,4 +43,4 @@ To the LLMs. For their assistance and for excellently explaining code, database,
 
 ## Project Notes
 
-For personal notes on the project’s code and database, see the [Docs](https://github.com/sabbirahmedfahim/cp_repository/blob/main/docs/cp_repository_notes.pdf) | [Drive](https://drive.google.com/file/d/1BWqaLVQNiGywe4NZn3o-JolhefX34Csu/view?usp=sharing).
+For personal notes on the project’s code and database, see the [Drive](https://drive.google.com/file/d/1BWqaLVQNiGywe4NZn3o-JolhefX34Csu/view?usp=sharing) | [Docs](https://github.com/sabbirahmedfahim/cp_repository/blob/main/docs/cp_repository_notes.pdf).
