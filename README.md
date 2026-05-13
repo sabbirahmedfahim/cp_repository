@@ -1,10 +1,12 @@
 # CP Repository - Online Judge Problem Tracker
-
+##  Live Link: [https://cp-repository.netlify.app/](https://cp-repository.netlify.app/)
 <img src="assets/images/home_screen.png" alt="Home Screen" width="600">
 
 <p align="center"><em>**Home Screen**</em></p>
 
-# [Mobile App Simulations (YouTube)](https://www.youtube.com/shorts/raMP08OjC54)
+## App Demo
+
+[![Watch Demo](https://img.youtube.com/vi/raMP08OjC54/maxresdefault.jpg)](https://www.youtube.com/shorts/raMP08OjC54)
 
 # Project Overview
 
