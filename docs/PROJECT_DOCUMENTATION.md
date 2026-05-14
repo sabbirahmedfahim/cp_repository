@@ -102,8 +102,7 @@ This is a Competitive Programming (CP) problem tracker app. Users can log in, ad
 4. **User Profiles:** Store user name and university (auto-created on registration)
 5. **Statistics:** Track solved/attempt/pending counts
 6. **Platform Support:** Works with any CP platform (LeetCode, Codeforces, CSES, etc.)
-7. **Pinning System:** Pin important problems for focus
-8. **Responsive Design:** Works on mobile, tablet, and desktop
+7. **Responsive Design:** Works on mobile, tablet, and desktop
 
 ## App File Structure (15 files)
 1. `main.dart` - App initialization
